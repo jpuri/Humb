@@ -1,0 +1,21 @@
+{
+  "name": "core",
+  "version": "0.0.0",
+  "description": "Editor core",
+  "main": "built/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "storybook": "start-storybook -p 6006",
+    "build-storybook": "build-storybook"
+  },
+  "author": "Jyoti Puri <jyotipuri@gmail.com>",
+  "license": "MIT",
+  "dependencies": {
+    "react": "^15.5.4",
+    "react-dom": "^15.5.4"
+  },
+  "devDependencies": {
+    "babel-preset-env": "^1.4.0",
+    "@kadira/storybook": "^2.21.0"
+  }
+}
