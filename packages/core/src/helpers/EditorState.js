@@ -8,17 +8,20 @@ const initialState = {
 };
 
 function addContent(editorState, node, content) {
-  const newState = { ...editorState, nodes: [ ...editorState.nodes ]} 
-  if (typeof newState.nodes[0].content == string) {
-    newState.nodes[0].content = newState.nodes[0].content + content;
-  } else {
-    newState.nodes[0].content = content;
+  let index = window.getSelection().focusNode.attributes.getNamedItem('data-index');
+  if (index === undefined) {
+index = window.getSelection().focusNode.parentNode.attributes.getNamedItem('data-index');
   }
-  return newState;
+  if (index && index.nodeValue) {
+    const newState = { ...editorState, nodes: [ ...editorState.nodes ]} 
+    newState.nodes[index.nodeValue].content = newState.nodes[index.nodeValue].content + content;
+    return newState;
+  }
+  return editorState;
 };
 
 function addNode (editorState, type) {
-  return { ...editorState, nodes: [ ...editorState.nodes, { type, content: '' }]} 
+  return { ...editorState, nodes: [ ...editorState.nodes, { type, content: <br /> }]} 
 };
 
 module.exports = {

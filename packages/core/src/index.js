@@ -14,7 +14,7 @@ export class Editor extends Component {
   }
 
   componentDidUpdate() {
-    this.selection.moveByOneCharacter();
+    this.selection.clearUpdateQueue();
   }
 
   onChange = (editorState) => {
@@ -25,7 +25,7 @@ export class Editor extends Component {
 
   onKeyDown = (e) => {
     const { editorState } = this.state;
-    KeyDown.onKeyDown(e, editorState, this.onChange);
+    KeyDown.onKeyDown(e, editorState, this.onChange, this.selection);
   }
 
   render() {
@@ -40,6 +40,7 @@ export class Editor extends Component {
           const Node = nodes[node.type];
           return <Node
             key={index}
+            index={index}
             content={node.content}
           />;
         })}
@@ -51,5 +52,5 @@ export class Editor extends Component {
 // TODO:
 // 1. Use current selection to see which node is highlighted and change content accordingly.
 // 2. Text should be entered for only characters in selected node.
-// 3. componentDidUpdate: should update selection depending on last operation.
-// 4. use immutablejs
+// 3. Use immutablejs.
+// 4. It should be possible to change text anywhere in the node.

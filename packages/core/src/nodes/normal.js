@@ -3,9 +3,9 @@ import React, { Component } from 'react';
 export default class Normal extends Component {
   
   render() {
-    const { content } = this.props;
+    const { index, content } = this.props;
     return (
-      <div>
+      <div data-index={index}>
         {content}
       </div>
     );
