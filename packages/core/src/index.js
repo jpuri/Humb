@@ -1,17 +1,20 @@
 import React, { Component } from 'react';
 
-import { StateUtil } from './utils';
+import { Selection, KeyDown, EditorState } from './helpers';
 import nodes from './nodes';
 
 export class Editor extends Component {
-  
-  state = {
-    editorState: StateUtil.defaultState,
+
+  constructor(props) {
+    super(props);
+    this.state = {
+      editorState: EditorState.initialState,
+    };
+    this.selection = new Selection();
   }
 
   componentDidUpdate() {
-    var selection = window.getSelection();
-    selection.modify("move", "forward", "character");
+    this.selection.moveByOneCharacter();
   }
 
   onChange = (editorState) => {
@@ -21,14 +24,8 @@ export class Editor extends Component {
   }
 
   onKeyDown = (e) => {
-    if (e.key === 'Enter') {
-      const { editorState } = this.state;
-      this.onChange(StateUtil.addNode(editorState, 'normal'));
-    } else {
-      const { editorState } = this.state;
-      this.onChange(StateUtil.addContent(editorState, 'normal', e.key));
-    }
-    e.preventDefault();
+    const { editorState } = this.state;
+    KeyDown.onKeyDown(e, editorState, this.onChange);
   }
 
   render() {
@@ -50,7 +47,6 @@ export class Editor extends Component {
     );
   }
 }
-
 
 // TODO:
 // 1. Use current selection to see which node is highlighted and change content accordingly.

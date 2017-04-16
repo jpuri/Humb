@@ -11,11 +11,12 @@
   "author": "Jyoti Puri <jyotipuri@gmail.com>",
   "license": "MIT",
   "dependencies": {
+    "immutable": "^3.8.1",
     "react": "^15.5.4",
     "react-dom": "^15.5.4"
   },
   "devDependencies": {
-    "babel-preset-env": "^1.4.0",
-    "@kadira/storybook": "^2.21.0"
+    "@kadira/storybook": "^2.21.0",
+    "babel-preset-env": "^1.4.0"
   }
 }
