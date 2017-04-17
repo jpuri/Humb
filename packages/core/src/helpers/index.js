@@ -1,9 +1,11 @@
-import Selection from './Selection';
+import Events from './Events';
 import KeyDown from './KeyDown';
+import Selection from './Selection';
 import EditorState from './EditorState';
 
 module.exports = {
-  Selection,
+  Events,
   KeyDown,
+  Selection,
   EditorState,
 };

@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 
-import { Selection, KeyDown, EditorState } from './helpers';
+import { Selection, KeyDown, EditorState, Events } from './helpers';
 import nodes from './nodes';
 
 export class Editor extends Component {
@@ -10,11 +10,6 @@ export class Editor extends Component {
     this.state = {
       editorState: EditorState.initialState,
     };
-    this.selection = new Selection();
-  }
-
-  componentDidUpdate() {
-    this.selection.clearUpdateQueue();
   }
 
   onChange = (editorState) => {
@@ -23,24 +18,17 @@ export class Editor extends Component {
     });
   }
 
-  onKeyDown = (e) => {
-    const { editorState } = this.state;
-    KeyDown.onKeyDown(e, editorState, this.onChange, this.selection);
-  }
-
   render() {
     const { editorState } = this.state;
     return (
       <div
         contentEditable
         suppressContentEditableWarning
-        onKeyDown={this.onKeyDown}
       >
         {editorState.get('nodes').map((node, index) => {
           const Node = nodes[node.get('type')];
           return <Node
             key={index}
-            index={index}
             content={node.get('content')}
           />;
         })}
