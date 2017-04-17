@@ -36,12 +36,12 @@ export class Editor extends Component {
         suppressContentEditableWarning
         onKeyDown={this.onKeyDown}
       >
-        {editorState.nodes.map((node, index) => {
-          const Node = nodes[node.type];
+        {editorState.get('nodes').map((node, index) => {
+          const Node = nodes[node.get('type')];
           return <Node
             key={index}
             index={index}
-            content={node.content}
+            content={node.get('content')}
           />;
         })}
       </div>
@@ -50,6 +50,7 @@ export class Editor extends Component {
 }
 
 // TODO:
+// Selection should be part of editor state so that its consistent during undo and redo.
+// 
 // 2. Text should be entered for only characters in selected node.
-// 3. Use immutablejs.
 // 4. It should be possible to change text anywhere in the node.
