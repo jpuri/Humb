@@ -6,7 +6,7 @@ export default class Normal extends Component {
     const { index, content } = this.props;
     return (
       <div data-index={index}>
-        {content}
+        {content || <br />}
       </div>
     );
   }

@@ -50,7 +50,6 @@ export class Editor extends Component {
 }
 
 // TODO:
-// 1. Use current selection to see which node is highlighted and change content accordingly.
 // 2. Text should be entered for only characters in selected node.
 // 3. Use immutablejs.
 // 4. It should be possible to change text anywhere in the node.
