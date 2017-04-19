@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 
-import { Selection, KeyDown, EditorState, Events } from './helpers';
+import { EditorState, KeyDown, Selection } from './helpers';
 import nodes from './nodes';
 
 export class Editor extends Component {
@@ -12,10 +12,19 @@ export class Editor extends Component {
     };
   }
 
+  componentDidUpdate() {
+    Selection.clearUpdateQueue();
+  }
+
   onChange = (editorState) => {
     this.setState({
       editorState,
     });
+  }
+
+  onKeyDown = (e) => {
+    const { editorState } = this.state;
+    KeyDown.onKeyDown(e, editorState, this.onChange);
   }
 
   render() {
@@ -24,11 +33,13 @@ export class Editor extends Component {
       <div
         contentEditable
         suppressContentEditableWarning
+        onKeyDown={this.onKeyDown}
       >
-        {editorState.get('nodes').map((node, index) => {
+        {editorState.get('nodes').map(node => {
           const Node = nodes[node.get('type')];
           return <Node
-            key={index}
+            key={node.get('key')}
+            index={node.get('key')}
             content={node.get('content')}
           />;
         })}
@@ -42,3 +53,4 @@ export class Editor extends Component {
 // 
 // 2. Text should be entered for only characters in selected node.
 // 4. It should be possible to change text anywhere in the node.
+// 5. Trigger re-render selectively
