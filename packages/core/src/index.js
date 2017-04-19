@@ -29,20 +29,24 @@ export class Editor extends Component {
 
   render() {
     const { editorState } = this.state;
+    console.log('**', editorState.get('nodes').toJS())
     return (
       <div
         contentEditable
         suppressContentEditableWarning
         onKeyDown={this.onKeyDown}
       >
-        {editorState.get('nodes').map(node => {
-          const Node = nodes[node.get('type')];
-          return <Node
-            key={node.get('key')}
-            index={node.get('key')}
-            content={node.get('content')}
-          />;
-        })}
+        {editorState.get('nodes').filter(node => node.get('depth') === 0)
+          .map(node => {
+            const Node = nodes[node.get('type')];
+            return <Node
+              key={node.get('key')}
+              nodes={nodes}
+              editorState={editorState}
+              index={node.get('key')}
+              children={node.get('children')}
+            />;
+          })}
       </div>
     );
   }

@@ -16,7 +16,7 @@ export default class Selection {
   static moveToNextNode = () => {
     const selection = window.getSelection();
     if (selection && selection.focusNode && selection.focusOffset !== undefined) {
-      selection.setPosition(selection.focusNode.parentNode.nextSibling, 0);
+      selection.setPosition(selection.focusNode.parentNode.parentNode.nextSibling, 0);
     }
   }
   // todo: better way to find active node
