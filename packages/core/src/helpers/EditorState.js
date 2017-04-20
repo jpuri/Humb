@@ -44,7 +44,6 @@ function addNode(editorState) {
 function updateContent(editorState) {
   const { domNode, nodeIndex } = getActiveNode(editorState);
   let node = editorState.get('nodes').get(nodeIndex);
-  console.log('nodeIndex', nodeIndex)
   node = node.set('content', domNode.textContent)
   const nodes = editorState.get('nodes').set(nodeIndex, node);
   return editorState.set('nodes', nodes);
@@ -60,7 +59,6 @@ function getActiveNode(editorState) {
     }
     domNode = domNode.parentNode;
   }
-  console.log('key', key)
   const nodeIndex = key && editorState.get('nodes').findIndex((node) => node.get('key') === key);
   return {
     key,
@@ -82,7 +80,6 @@ function getActiveBlockNode(editorState) {
     }
     domNode = domNode.parentNode;
   }
-  console.log('key', key)
   const nodeIndex = key && editorState.get('nodes').findIndex((node) => node.get('key') === key);
   return {
     key,
@@ -91,9 +88,33 @@ function getActiveBlockNode(editorState) {
   };
 };
 
+function insertNode(editorState) {
+  const selection = window.getSelection();
+
+  const { nodeIndex } = getActiveBlockNode(editorState);
+  let node = editorState.get('nodes').get(nodeIndex);
+  const key = keyGen();
+  const nodeChildren = node.get('children').push(key);
+  node = node.set('children', nodeChildren);
+
+  let nodes = editorState.get('nodes').set(nodeIndex, node);
+  nodes = nodes.push(fromJS({
+    type: 'bold',
+    key: key,
+    depth: 1,
+    content: 'testing',
+  }));
+
+  return editorState.set('nodes', nodes);
+}
+
 module.exports = {
   // getActiveNode,
   initialState,
   updateContent,
+  insertNode,
   addNode,
 };
+
+
+// todo: make state key->value map
