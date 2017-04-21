@@ -7,8 +7,9 @@ export class Editor extends Component {
 
   constructor(props) {
     super(props);
+    this.editorState = EditorState.getInitialState();
     this.state = {
-      editorState: EditorState.initialState,
+      editorState: this.editorState,
     };
   }
 
@@ -17,14 +18,19 @@ export class Editor extends Component {
   }
 
   onChange = (editorState) => {
+    this.editorState = editorState;
     this.setState({
       editorState,
     });
   }
 
+  updateEditorState = (editorState) => {
+    this.editorState = editorState;
+  }
+
   onKeyDown = (e) => {
     const { editorState } = this.state;
-    KeyDown.onKeyDown(e, editorState, this.onChange);
+    KeyDown.onKeyDown(e, editorState, this.onChange, this.updateEditorState);
   }
 
   render() {
