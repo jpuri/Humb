@@ -3,12 +3,11 @@ import React, { Component } from 'react';
 export default class Normal extends Component {
   
   render() {
-    const { children, index, nodes, editorState } = this.props;
+    const { children, index, nodes } = this.props;
     return (
       <div data-editor-key={index}>
-        {children && children.size > 0 ? children.map(key => {
-          const node = editorState.get('nodes').find((node) => node.get('key') === key);
-          console.log('123', node.get('type'));
+        {children && children.size > 0 ?
+          children.map(node => {
           const Node = nodes[node.get('type')];
           return <Node
             key={node.get('key')}

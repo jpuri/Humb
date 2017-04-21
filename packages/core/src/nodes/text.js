@@ -12,11 +12,6 @@ export default class Text extends Component {
   }
 }
 
-
-
 /**
- * todo: revert to this ultimately :)
-const text = ({ content}) => content;
-
-export default text;
-*/
+ * TODO: Ultimately I will prefer to have test without a span.
+ */

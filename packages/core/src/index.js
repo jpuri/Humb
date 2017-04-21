@@ -29,22 +29,22 @@ export class Editor extends Component {
 
   render() {
     const { editorState } = this.state;
-    console.log('**', editorState.get('nodes').toJS())
+    const editorNodes = editorState.get('nodes');
     return (
       <div
         contentEditable
         suppressContentEditableWarning
         onKeyDown={this.onKeyDown}
       >
-        {editorState.get('nodes').filter(node => node.get('depth') === 0)
+        {editorNodes.filter(node => node.get('depth') === 0)
           .map(node => {
             const Node = nodes[node.get('type')];
+            const children = editorNodes.filter(n => node.get('children').includes(n.get('key')));
             return <Node
               key={node.get('key')}
               nodes={nodes}
-              editorState={editorState}
               index={node.get('key')}
-              children={node.get('children')}
+              children={children}
             />;
           })}
       </div>
@@ -53,8 +53,5 @@ export class Editor extends Component {
 }
 
 // TODO:
-// Selection should be part of editor state so that its consistent during undo and redo.
-// 
-// 2. Text should be entered for only characters in selected node.
-// 4. It should be possible to change text anywhere in the node.
-// 5. Trigger re-render selectively
+// 1. Selection should be part of editor state so that its consistent during undo and redo.
+// 2. It should be possible to change text anywhere in the node.
