@@ -2,7 +2,7 @@ import EditorState from './EditorState';
 import Selection from './Selection';
 
 export function onKeyDown(e, editorState, onChange, updateEditorState) {
-  const { key, metaKey } = e;
+  const { key, metaKey, shiftKey } = e;
   if (key === 'Enter') {
     onChange(EditorState.addNode(editorState));
     Selection.addToUpdateQueue('moveToNextNode');
@@ -15,8 +15,11 @@ export function onKeyDown(e, editorState, onChange, updateEditorState) {
   } else if (metaKey && key === 'b') {
     onChange(EditorState.insertNode(editorState, 'bold'));
     e.preventDefault();
+  } else if (metaKey || shiftKey) {
+    // e.preventDefault();
   } else {
-    updateEditorState(EditorState.updateContent(editorState, key));
+    onChange(EditorState.updateContent(editorState, key));
+    e.preventDefault();
   }
 }
 

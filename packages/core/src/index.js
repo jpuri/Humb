@@ -29,13 +29,13 @@ export class Editor extends Component {
   }
 
   onKeyDown = (e) => {
-    const { editorState } = this.state;
-    KeyDown.onKeyDown(e, editorState, this.onChange, this.updateEditorState);
+    KeyDown.onKeyDown(e, this.state.editorState, this.onChange, this.updateEditorState);
   }
 
   render() {
     const { editorState } = this.state;
     const editorNodes = editorState.get('nodes');
+    console.log('**', editorNodes.toJS())
     return (
       <div
         contentEditable

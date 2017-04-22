@@ -42,7 +42,7 @@ function addNode(editorState) {
 function updateContent(editorState, key) {
   const { domNode, nodeIndex } = getActiveNode(editorState);
   let node = editorState.get('nodes').get(nodeIndex);
-  node = node.set('content', domNode.textContent)
+  node = node.set('content', domNode.textContent + key)
   const nodes = editorState.get('nodes').set(nodeIndex, node);
   return editorState.set('nodes', nodes);
 };
@@ -87,20 +87,37 @@ function getActiveBlockNode(editorState) {
   };
 };
 
-function insertNode(editorState) {
+function insertNode(editorState, type) {
   const selection = window.getSelection();
-  const { nodeIndex } = getActiveBlockNode(editorState);
-  const key = keyGen();
+  let { nodeIndex : parentNodeIndex } = getActiveBlockNode(editorState);
+  const { nodeIndex } = getActiveNode(editorState);
   let node = editorState.get('nodes').get(nodeIndex);
-  const nodeChildren = node.get('children').push(key);
-  node = node.set('children', nodeChildren);
-  let nodes = editorState.get('nodes').set(nodeIndex, node);
+  let parentNode = editorState.get('nodes').get(parentNodeIndex);
+  const nodeContent = node.get('content');
+  let key;
+  let nodes = editorState.get('nodes');
+  if (selection.focusOffset !== selection.anchorOffset) {
+    key = keyGen();
+    nodes = nodes.push(fromJS({
+      type: type,
+      key: key,
+      depth: node.get('depth'),
+      content: nodeContent.substr(selection.focusOffset, (selection.anchorOffset - selection.focusOffset)),
+    }));
+    console.log('**', parentNode.get('children'))
+    parentNode = parentNode.set('children', parentNode.get('children').push(key));
+  }
+  key = keyGen();
   nodes = nodes.push(fromJS({
-    type: 'bold',
+    type: node.get('type'),
     key: key,
-    depth: 1,
-    content: 'testing',
+    depth: node.get('depth'),
+    content: nodeContent.substr(selection.anchorOffset),
   }));
+  parentNode = parentNode.set('children', parentNode.get('children').push(key));
+  node = node.set('content', nodeContent && nodeContent.substr(0, selection.focusOffset));
+  nodes = nodes.set(nodeIndex, node);
+  nodes = nodes.set(parentNodeIndex, parentNode);
   return editorState.set('nodes', nodes);
 }
 // todo123: insert node should break existing nodes.
