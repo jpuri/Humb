@@ -22,6 +22,7 @@ export function onKeyDown(e, editorState, onChange, updateEditorState) {
     // e.preventDefault();
   } else {
     onChange(EditorState.updateContent(editorState, key));
+    Selection.addToUpdateQueue('moveForward');
     e.preventDefault();
   }
 }

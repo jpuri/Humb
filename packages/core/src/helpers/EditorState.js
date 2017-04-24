@@ -51,8 +51,8 @@ function updateContent(editorState, key) {
   node.get('children').forEach(n => {
     let childNode = editorState.get('nodes').find(no => no.get('key') === n);
     // todo: fix condition after selection update logic if fixed
-    // if (childNode.get('start') <= cursor && childNode.get('end') <= cursor) {
-    if (true) {
+    if (childNode.get('start') <= cursor && childNode.get('end') >= cursor) {
+    // if (true) {
       childNode = childNode.set('content', childNode.get('content') ? childNode.get('content') + key : key);
       childNode = childNode.set('end', childNode.get('end') + 1);
     }

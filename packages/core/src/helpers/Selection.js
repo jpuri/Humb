@@ -1,6 +1,9 @@
 export default {
   updateQueue: [],
 
+  // todo: selection initialization should be dynamic
+  selPos: 0,
+
   addToUpdateQueue: function(update) {
     this.updateQueue.push(update);
   },
@@ -11,7 +14,11 @@ export default {
   },
 
   moveForward: function() {
-    // too: to be implemented
+    const selection = window.getSelection();
+    if (selection && selection.focusNode && selection.focusOffset !== undefined) {
+      selection.setPosition(selection.focusNode, this.selPos);
+      this.selPos += 1;
+    }
   },
 
   moveToNextBlock: function() {
