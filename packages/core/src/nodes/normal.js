@@ -8,13 +8,16 @@ export default class Normal extends Component {
       <div data-editor-key={index}>
         {children && children.size > 0 ?
           children.map(node => {
-          const Node = nodes[node.get('type')];
-          return <Node
-            key={node.get('key')}
-            index={node.get('key')}
-            content={node.get('content')}
-          />;
-        }) : <br />}
+          if (node.get('type') === 'text') {
+            return node.get('content') || <br />;
+          } else {
+            const Node = nodes[node.get('type')];
+            return <Node
+              key={node.get('key')}
+              index={node.get('key')}
+              content={node.get('content')}
+            />;
+          }}) : <br />}
       </div>
     );
   }

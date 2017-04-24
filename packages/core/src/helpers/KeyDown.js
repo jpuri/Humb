@@ -5,7 +5,7 @@ export function onKeyDown(e, editorState, onChange, updateEditorState) {
   const { key, metaKey, shiftKey } = e;
   if (key === 'Enter') {
     onChange(EditorState.addNode(editorState));
-    Selection.addToUpdateQueue('moveToNextNode');
+    Selection.addToUpdateQueue('moveToNextBlock');
     e.preventDefault();
   } else if (key === 'ArrowUp' ||
     key === 'ArrowDown' ||
@@ -14,6 +14,9 @@ export function onKeyDown(e, editorState, onChange, updateEditorState) {
     key === 'Backspace') {
   } else if (metaKey && key === 'b') {
     onChange(EditorState.insertNode(editorState, 'bold'));
+    e.preventDefault();
+  } else if (metaKey && key === 'i') {
+    onChange(EditorState.insertNode(editorState, 'italic'));
     e.preventDefault();
   } else if (metaKey || shiftKey) {
     // e.preventDefault();

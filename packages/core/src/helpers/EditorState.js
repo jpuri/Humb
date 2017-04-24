@@ -6,11 +6,15 @@ const getInitialState = () => {
   const key = keyGen();
   return fromJS({
     nodes: [{
+      start: 0,
+      end: 0,
       type: 'normal',
       key: keyGen(),
       depth: 0,
       children: [key],
     }, {
+      start: 0,
+      end: 0,
       type: 'text',
       key: key,
       depth: 1,
@@ -40,10 +44,20 @@ function addNode(editorState) {
 // todo123: If old node is broken in-between transfer content to new node.
 
 function updateContent(editorState, key) {
-  const { domNode, nodeIndex } = getActiveNode(editorState);
+  const { nodeIndex } = getActiveBlockNode(editorState);
+  const cursor = window.getSelection().focusOffset;
   let node = editorState.get('nodes').get(nodeIndex);
-  node = node.set('content', domNode.textContent + key)
-  const nodes = editorState.get('nodes').set(nodeIndex, node);
+  let nodes;
+  node.get('children').forEach(n => {
+    let childNode = editorState.get('nodes').find(no => no.get('key') === n);
+    // todo: fix condition after selection update logic if fixed
+    // if (childNode.get('start') <= cursor && childNode.get('end') <= cursor) {
+    if (true) {
+      childNode = childNode.set('content', childNode.get('content') ? childNode.get('content') + key : key);
+      childNode = childNode.set('end', childNode.get('end') + 1);
+    }
+    nodes = editorState.get('nodes').set(1, childNode);
+  })
   return editorState.set('nodes', nodes);
 };
 
@@ -94,17 +108,18 @@ function insertNode(editorState, type) {
   let node = editorState.get('nodes').get(nodeIndex);
   let parentNode = editorState.get('nodes').get(parentNodeIndex);
   const nodeContent = node.get('content');
+  const start = selection.focusOffset < selection.anchorOffset ? selection.focusOffset : selection.anchorOffset;
+  const end = selection.focusOffset > selection.anchorOffset ? selection.focusOffset : selection.anchorOffset;
   let key;
   let nodes = editorState.get('nodes');
-  if (selection.focusOffset !== selection.anchorOffset) {
+  if (start !== end) {
     key = keyGen();
     nodes = nodes.push(fromJS({
       type: type,
       key: key,
       depth: node.get('depth'),
-      content: nodeContent.substr(selection.focusOffset, (selection.anchorOffset - selection.focusOffset)),
+      content: nodeContent.substr(start, (end - start)),
     }));
-    console.log('**', parentNode.get('children'))
     parentNode = parentNode.set('children', parentNode.get('children').push(key));
   }
   key = keyGen();
@@ -112,10 +127,10 @@ function insertNode(editorState, type) {
     type: node.get('type'),
     key: key,
     depth: node.get('depth'),
-    content: nodeContent.substr(selection.anchorOffset),
+    content: nodeContent.substr(end),
   }));
   parentNode = parentNode.set('children', parentNode.get('children').push(key));
-  node = node.set('content', nodeContent && nodeContent.substr(0, selection.focusOffset));
+  node = node.set('content', nodeContent && nodeContent.substr(0, start));
   nodes = nodes.set(nodeIndex, node);
   nodes = nodes.set(parentNodeIndex, parentNode);
   return editorState.set('nodes', nodes);
