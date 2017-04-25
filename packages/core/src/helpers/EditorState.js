@@ -28,11 +28,15 @@ function addNode(editorState) {
   const node = editorState.get('nodes').get(nodeIndex);
   const key = keyGen();
   const newnodes = fromJS([{
+    start: 0,
+    end: 0,
     type: node.get('type'),
     key: keyGen(),
     depth: 0,
     children: [key],
   }, {
+    start: 0,
+    end: 0,
     type: 'text',
     key: key,
     depth: 1,
@@ -45,18 +49,19 @@ function addNode(editorState) {
 
 function updateContent(editorState, key) {
   const { nodeIndex } = getActiveBlockNode(editorState);
-  const cursor = window.getSelection().focusOffset;
   let node = editorState.get('nodes').get(nodeIndex);
+  const cursor = window.getSelection().focusOffset;
+
   let nodes;
   node.get('children').forEach(n => {
-    let childNode = editorState.get('nodes').find(no => no.get('key') === n);
-    // todo: fix condition after selection update logic if fixed
+    const childNodeIndex = editorState.get('nodes').findIndex(no => no.get('key') === n);
+    let childNode = editorState.get('nodes').get(childNodeIndex);
     if (childNode.get('start') <= cursor && childNode.get('end') >= cursor) {
-    // if (true) {
-      childNode = childNode.set('content', childNode.get('content') ? childNode.get('content') + key : key);
+      const content = childNode.get('content');
+      childNode = childNode.set('content', content ? content.substr(0, cursor) + key + content.substr(cursor): key);
       childNode = childNode.set('end', childNode.get('end') + 1);
     }
-    nodes = editorState.get('nodes').set(1, childNode);
+    nodes = editorState.get('nodes').set(childNodeIndex, childNode);
   })
   return editorState.set('nodes', nodes);
 };

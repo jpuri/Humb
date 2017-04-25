@@ -1,7 +1,6 @@
 export default {
   updateQueue: [],
 
-  // todo: selection initialization should be dynamic
   selPos: 0,
 
   addToUpdateQueue: function(update) {
@@ -13,19 +12,47 @@ export default {
     this.updateQueue = [];
   },
 
+  reset: function() {
+    const selection = window.getSelection();
+    this.selPos = selection.focusOffset;
+  },
+
   moveForward: function() {
     const selection = window.getSelection();
-    if (selection && selection.focusNode && selection.focusOffset !== undefined) {
-      selection.setPosition(selection.focusNode, this.selPos);
+    const focusNode = selection && selection.focusNode;
+    if (focusNode) {
       this.selPos += 1;
+      let node;
+      if (focusNode.attributes && focusNode.attributes.getNamedItem('data-editor-key')) {
+        for (let i = 0; i < focusNode.childNodes.length; i++) {
+          if(focusNode.childNodes.item(i).nodeName === '#text') {
+            node = focusNode.childNodes.item(i);
+            break;
+          }
+        }
+      } else {
+        node = focusNode;
+      }
+      selection.setPosition(node, this.selPos);
     }
   },
 
   moveToNextBlock: function() {
     const selection = window.getSelection();
-    if (selection && selection.focusNode && selection.focusOffset !== undefined) {
-      selection.setPosition(selection.focusNode.parentNode.parentNode.nextSibling, 0);
-      // todo: better way to find block node
+    if (selection && selection.focusNode) {
+      let focusNode;
+      let node = selection.focusNode;
+      while(node) {
+        if(node.attributes && node.attributes.getNamedItem('data-editor-key')) {
+          focusNode = node;
+          break;
+        }
+        node = node.parentNode;
+      };
+      this.selPos = 0;
+      selection.setPosition(focusNode.nextSibling, this.selPos);
     };
   },
 }
+
+// todo: save selection as part of editor state to have it restored during re-hydrating

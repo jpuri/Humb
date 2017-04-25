@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 
-import { EditorState, KeyDown, Selection } from './helpers';
+import { EditorState, KeyDown, Selection, Events } from './helpers';
 import nodes from './nodes';
 
 export class Editor extends Component {
@@ -41,6 +41,7 @@ export class Editor extends Component {
         contentEditable
         suppressContentEditableWarning
         onKeyDown={this.onKeyDown}
+        onClick={Events.onClick}
       >
         {editorNodes.filter(node => node.get('depth') === 0)
           .map(node => {
