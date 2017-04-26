@@ -3,6 +3,8 @@ import React, { Component } from 'react';
 import { EditorState, KeyDown, Selection, Events } from './helpers';
 import nodes from './nodes';
 
+import './styles.css';
+
 export class Editor extends Component {
 
   constructor(props) {
@@ -41,8 +43,9 @@ export class Editor extends Component {
         suppressContentEditableWarning
         onKeyDown={this.onKeyDown}
         onClick={Events.onClick}
+        className="humb-editor"
       >
-        {editorNodes.toList().filter(node => node.get('depth') === 0)
+        {editorNodes.toList().filter(node => node.get('depth') === 0).sortBy(node => node.get('start'))
           .map(node => {
             const Node = nodes[node.get('type')];
             const children = node.get('children').map(childKey => {

@@ -9,7 +9,7 @@ export default class Normal extends Component {
         {children && children.size > 0 ?
           children.map(node => {
           if (node.get('type') === 'text') {
-            return node.get('content') || <br />;
+            return node.get('content') || <br key={node.get('key')} />;
           } else {
             const Node = nodes[node.get('type')];
             return <Node

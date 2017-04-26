@@ -3,46 +3,71 @@ import { fromJS, Map } from 'immutable';
 import { keyGen } from '../utils';
 
 const getInitialState = () => {
+  const blockKey = keyGen();
+  const textKey = keyGen();
   return fromJS({
-    nodes: getBlankBlockNode('normal'),
+    nodes: {
+      [blockKey]: {
+        start: 0,
+        end: 0,
+        size: 0,
+        type: 'normal',
+        key: blockKey,
+        depth: 0,
+        children: [textKey],
+      },
+      [textKey]: {
+        start: 0,
+        end: 0,
+        size: 0,
+        type: 'text',
+        key: textKey,
+        depth: 1,
+        parent: blockKey,
+        content: undefined,
+      }
+    },
   });
 }
 
 function addNode(editorState) {
+  const cursor = window.getSelection().focusOffset;
   const { node } = getActiveBlockNode(editorState);
-  let nodes = getBlankBlockNode(node.get('type'));
-  nodes = editorState.get('nodes').merge(fromJS(nodes));
+  let nodes = editorState.get('nodes');
+  const key = keyGen();
+  let newNode = {
+    start: node.get('start') + 1,
+    end: node.get('end') + 1,
+    size: 0,
+    type: node.get('type'),
+    key: key,
+    depth: 0,
+    children: [],
+  };
+  nodes = nodes.set(key, fromJS(newNode));
+  if (cursor === node.size) {
+    const childKey = keyGen();
+    const childNode = {
+      start: 0,
+      end: 0,
+      size: 0,
+      type: 'text',
+      key: childKey,
+      depth: 1,
+      parent: key,
+      content: undefined,
+    };
+    nodes = nodes.set(key, nodes.get(key).set('children', fromJS([childKey])));
+    nodes = nodes.set(childKey, fromJS(childNode));
+  }
   return editorState.set('nodes', nodes);
 };
 // todo123: If old node is broken in-between transfer content to new node.
-
-function getBlankBlockNode(blockType) {
-  const blockKey = keyGen();
-  const textKey = keyGen();
-  return {
-    [blockKey]: {
-      start: 0,
-      end: 0,
-      type: blockType,
-      key: blockKey,
-      depth: 0,
-      children: [textKey],
-    },
-    [textKey]: {
-      start: 0,
-      end: 0,
-      type: 'text',
-      key: textKey,
-      depth: 1,
-      parent: blockKey,
-      content: undefined,
-    }
-  };
-}
+// todo: move position info to parent
 
 function updateContent(editorState, key) {
   const cursor = window.getSelection().focusOffset;
-  let { node } = getActiveNode(editorState);
+  let { key: nodeKey, node } = getActiveNode(editorState);
   let nodes = editorState.get('nodes');
   node.get('children').forEach(cKey => {
     let cNode = nodes.get(cKey);
@@ -56,8 +81,11 @@ function updateContent(editorState, key) {
     }
     nodes = editorState.get('nodes').set(cKey, cNode);
   });
+  node = node.set('size', node.get('size') + 1);
+  nodes = nodes.set(nodeKey, node);
   return editorState.set('nodes', nodes);
 };
+// if node is not block type update node after this node also, use getActiveBlockNode and write recursive function to insert content
 
 function getActiveNode(editorState) {
   let domNode = window.getSelection().focusNode;
