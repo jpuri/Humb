@@ -3,66 +3,59 @@ import { fromJS, Map } from 'immutable';
 import { keyGen } from '../utils';
 
 const getInitialState = () => {
-  const key = keyGen();
   return fromJS({
-    nodes: [{
-      start: 0,
-      end: 0,
-      type: 'normal',
-      key: keyGen(),
-      depth: 0,
-      children: [key],
-    }, {
-      start: 0,
-      end: 0,
-      type: 'text',
-      key: key,
-      depth: 1,
-      content: undefined,
-    }],
+    nodes: getBlankBlockNode('normal'),
   });
 }
 
 function addNode(editorState) {
-  const { nodeIndex } = getActiveBlockNode(editorState);
-  const node = editorState.get('nodes').get(nodeIndex);
-  const key = keyGen();
-  const newnodes = fromJS([{
-    start: 0,
-    end: 0,
-    type: node.get('type'),
-    key: keyGen(),
-    depth: 0,
-    children: [key],
-  }, {
-    start: 0,
-    end: 0,
-    type: 'text',
-    key: key,
-    depth: 1,
-    content: undefined,
-  }]);
-  const nodes = editorState.get('nodes').concat(newnodes);
+  const { node } = getActiveBlockNode(editorState);
+  let nodes = getBlankBlockNode(node.get('type'));
+  nodes = editorState.get('nodes').merge(fromJS(nodes));
   return editorState.set('nodes', nodes);
 };
 // todo123: If old node is broken in-between transfer content to new node.
 
-function updateContent(editorState, key) {
-  const { nodeIndex } = getActiveBlockNode(editorState);
-  let node = editorState.get('nodes').get(nodeIndex);
-  const cursor = window.getSelection().focusOffset;
-
-  let nodes;
-  node.get('children').forEach(n => {
-    const childNodeIndex = editorState.get('nodes').findIndex(no => no.get('key') === n);
-    let childNode = editorState.get('nodes').get(childNodeIndex);
-    if (childNode.get('start') <= cursor && childNode.get('end') >= cursor) {
-      const content = childNode.get('content');
-      childNode = childNode.set('content', content ? content.substr(0, cursor) + key + content.substr(cursor): key);
-      childNode = childNode.set('end', childNode.get('end') + 1);
+function getBlankBlockNode(blockType) {
+  const blockKey = keyGen();
+  const textKey = keyGen();
+  return {
+    [blockKey]: {
+      start: 0,
+      end: 0,
+      type: blockType,
+      key: blockKey,
+      depth: 0,
+      children: [textKey],
+    },
+    [textKey]: {
+      start: 0,
+      end: 0,
+      type: 'text',
+      key: textKey,
+      depth: 1,
+      parent: blockKey,
+      content: undefined,
     }
-    nodes = editorState.get('nodes').set(childNodeIndex, childNode);
-  })
+  };
+}
+
+function updateContent(editorState, key) {
+  const cursor = window.getSelection().focusOffset;
+  let { node } = getActiveNode(editorState);
+  let nodes = editorState.get('nodes');
+  node.get('children').forEach(cKey => {
+    let cNode = nodes.get(cKey);
+    if (cNode.get('start') <= cursor && cNode.get('end') >= cursor) {
+      const content = cNode.get('content');
+      cNode = cNode.set('content', content ? `${content.substr(0, cursor)}${key}${content.substr(cursor)}` : key);
+      cNode = cNode.set('end', cNode.get('end') + 1);
+    } else if (cNode.get('start') > cursor) {
+      cNode = cNode.set('start', cNode.get('start') + 1);
+      cNode = cNode.set('end', cNode.get('end') + 1);
+    }
+    nodes = editorState.get('nodes').set(cKey, cNode);
+  });
   return editorState.set('nodes', nodes);
 };
 
@@ -76,24 +69,24 @@ function getActiveNode(editorState) {
     }
     domNode = domNode.parentNode;
   }
-  const nodeIndex = key && editorState.get('nodes')
-    .findIndex((node) => node.get('key') === key);
+  const node = key && editorState.get('nodes') && editorState.get('nodes').get(key);
   return {
     key,
+    node,
     domNode,
-    nodeIndex,
   };
 };
 
 // todo: each node type should have a filed type to indicate it type, BLOCK, INLINE, block can never be child of inline.
+// todo: currently we have hard-coded type 'normal' that should be made more dynamic
 function getActiveBlockNode(editorState) {
   let domNode = window.getSelection().focusNode;
-  let key, nodeIndex;
+  let key, node;
   while(domNode) {
     if(domNode.attributes && domNode.attributes.getNamedItem('data-editor-key')) {
       key = domNode.attributes.getNamedItem('data-editor-key').nodeValue;
-      nodeIndex = key && editorState.get('nodes').findIndex((node) => node.get('key') === key);
-      if (editorState.get('nodes').get(nodeIndex).type === 'normal') {
+      node = key && editorState.get('nodes') && editorState.get('nodes').get(key);
+      if (node.type === 'normal') {
         break;
       }
     }
@@ -101,11 +94,12 @@ function getActiveBlockNode(editorState) {
   };
   return {
     key,
+    node,
     domNode,
-    nodeIndex,
   };
 };
 
+// tbd
 function insertNode(editorState, type) {
   const selection = window.getSelection();
   let { nodeIndex : parentNodeIndex } = getActiveBlockNode(editorState);
@@ -148,5 +142,3 @@ module.exports = {
   insertNode,
   addNode,
 };
-
-// todo: make state key->value map
