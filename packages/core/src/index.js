@@ -37,6 +37,7 @@ export class Editor extends Component {
   render() {
     const { editorState } = this.state;
     const editorNodes = editorState.get('nodes');
+    console.log('**', editorNodes.toJS())
     return (
       <div
         contentEditable
@@ -48,9 +49,7 @@ export class Editor extends Component {
         {editorNodes.toList().filter(node => node.get('depth') === 0).sortBy(node => node.get('start'))
           .map(node => {
             const Node = nodes[node.get('type')];
-            const children = node.get('children').map(childKey => {
-              return editorNodes.get(childKey);
-            });
+            const children = node.get('children').toList().map(child => editorNodes.get(child.get('key')));
             return <Node
               key={node.get('key')}
               nodes={nodes}

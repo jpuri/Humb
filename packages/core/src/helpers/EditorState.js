@@ -8,18 +8,17 @@ const getInitialState = () => {
   return fromJS({
     nodes: {
       [blockKey]: {
-        start: 0,
-        end: 0,
-        size: 0,
         type: 'normal',
         key: blockKey,
         depth: 0,
-        children: [textKey],
+        children: {
+          [textKey]: {
+          start: 0,
+          end: 0,
+          key: textKey,
+        }},
       },
       [textKey]: {
-        start: 0,
-        end: 0,
-        size: 0,
         type: 'text',
         key: textKey,
         depth: 1,
@@ -36,53 +35,43 @@ function addNode(editorState) {
   let nodes = editorState.get('nodes');
   const key = keyGen();
   let newNode = {
-    start: node.get('start') + 1,
-    end: node.get('end') + 1,
-    size: 0,
     type: node.get('type'),
     key: key,
     depth: 0,
-    children: [],
+    children: {},
   };
   nodes = nodes.set(key, fromJS(newNode));
-  if (cursor === node.size) {
+  // todo: find node size here
+  if (true) {
     const childKey = keyGen();
     const childNode = {
-      start: 0,
-      end: 0,
-      size: 0,
       type: 'text',
       key: childKey,
       depth: 1,
       parent: key,
       content: undefined,
     };
-    nodes = nodes.set(key, nodes.get(key).set('children', fromJS([childKey])));
+    nodes = nodes.set(key, nodes.get(key).set('children', fromJS({[childKey]: { key: childKey, start: 0, end: 0 }})));
     nodes = nodes.set(childKey, fromJS(childNode));
   }
   return editorState.set('nodes', nodes);
 };
 // todo123: If old node is broken in-between transfer content to new node.
-// todo: move position info to parent
 
 function updateContent(editorState, key) {
   const cursor = window.getSelection().focusOffset;
   let { key: nodeKey, node } = getActiveNode(editorState);
   let nodes = editorState.get('nodes');
-  node.get('children').forEach(cKey => {
-    let cNode = nodes.get(cKey);
-    if (cNode.get('start') <= cursor && cNode.get('end') >= cursor) {
+  node.get('children').toList().forEach(c => {
+    if (c.get('start') <= cursor && c.get('end') >= cursor) {
+      let cNode = nodes.get(c.get('key'));
       const content = cNode.get('content');
       cNode = cNode.set('content', content ? `${content.substr(0, cursor)}${key}${content.substr(cursor)}` : key);
-      cNode = cNode.set('end', cNode.get('end') + 1);
-    } else if (cNode.get('start') > cursor) {
-      cNode = cNode.set('start', cNode.get('start') + 1);
-      cNode = cNode.set('end', cNode.get('end') + 1);
+      node = node.set('children', node.get('children').set(c.get('key'), c.set('end', c.get('end') + 1)));
+      nodes = nodes.set(c.get('key'), cNode);
+      nodes = nodes.set(nodeKey, node);
     }
-    nodes = editorState.get('nodes').set(cKey, cNode);
   });
-  node = node.set('size', node.get('size') + 1);
-  nodes = nodes.set(nodeKey, node);
   return editorState.set('nodes', nodes);
 };
 // if node is not block type update node after this node also, use getActiveBlockNode and write recursive function to insert content
