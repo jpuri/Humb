@@ -7,3 +7,5 @@ const onClick = (event) => {
 module.exports = {
   onClick,
 };
+
+// todo: paste event handling

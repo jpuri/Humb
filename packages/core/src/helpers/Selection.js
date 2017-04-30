@@ -53,4 +53,15 @@ export default {
       selection.setPosition(focusNode.nextSibling, this.selPos);
     };
   },
+
+  getOffsets: function() {
+    const selection = window.getSelection();
+    const { anchorOffset, focusOffset } = selection;
+  
+    if (anchorOffset <= focusOffset) {
+      return { start: anchorOffset, end: focusOffset };
+    } else {
+      return { start: focusOffset, end: anchorOffset };
+    }
+  }
 }

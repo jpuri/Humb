@@ -32,6 +32,7 @@ export function onKeyDown(e, editorState, onChange, updateEditorState) {
  * - backspace to update state and delete last character
  * - selection deletion to update node contents
  * - arrowKeys to change cursor
+ * - shift enter to be new line
  */
 
 module.exports = {
