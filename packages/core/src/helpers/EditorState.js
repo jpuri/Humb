@@ -29,6 +29,40 @@ const getInitialState = () => {
   });
 }
 
+function getNodeSize(node) {
+  const lastChild = node.get('children').maxBy(child => child.get('end'));
+  return lastChild.get('end');
+}
+
+function getActiveNode(editorState) {
+  let domNode = window.getSelection().focusNode;
+  let key;
+  while(domNode) {
+    if(domNode.attributes && domNode.attributes.getNamedItem('data-editor-key')) {
+      key = domNode.attributes.getNamedItem('data-editor-key').nodeValue;
+      break;
+    }
+    domNode = domNode.parentNode;
+  }
+  const node = key && editorState.get('nodes') && editorState.get('nodes').get(key);
+  return {
+    key,
+    node,
+    domNode,
+  };
+};
+
+function changeBlockType(editorState, type) {
+  const selection = window.getSelection();
+  let { key, node } = getActiveBlockNode(editorState);
+  node = node.set('type', type);
+  const nodes = editorState.get('nodes').set(key, node);
+  editorState = editorState.set('nodes', nodes);
+  return editorState;
+}
+
+/////////////////////////////////
+
 function addNode(editorState) {
   const cursor = window.getSelection().focusOffset;
   const { node } = getActiveBlockNode(editorState);
@@ -81,10 +115,6 @@ function addNode(editorState) {
 // todo123: If old node is broken in-between transfer content to new node.
 // remove selection at time of enter
 
-function getNodeSize(node) {
-  const lastChild = node.get('children').maxBy(child => child.get('end'));
-  return lastChild.get('end');
-}
 
 function updateContent(editorState, key) {
   const cursor = window.getSelection().focusOffset;
@@ -107,23 +137,6 @@ function updateContent(editorState, key) {
 };
 // if node is not block type update node after this node also, use getActiveBlockNode and write recursive function to insert content
 
-function getActiveNode(editorState) {
-  let domNode = window.getSelection().focusNode;
-  let key;
-  while(domNode) {
-    if(domNode.attributes && domNode.attributes.getNamedItem('data-editor-key')) {
-      key = domNode.attributes.getNamedItem('data-editor-key').nodeValue;
-      break;
-    }
-    domNode = domNode.parentNode;
-  }
-  const node = key && editorState.get('nodes') && editorState.get('nodes').get(key);
-  return {
-    key,
-    node,
-    domNode,
-  };
-};
 
 // todo: each node type should have a filed type to indicate it type, BLOCK, INLINE, block can never be child of inline.
 // todo: currently we have hard-coded type 'normal' that should be made more dynamic
@@ -150,42 +163,45 @@ function getActiveBlockNode(editorState) {
 // tbd
 function insertNode(editorState, type) {
   const selection = window.getSelection();
-  let { nodeIndex : parentNodeIndex } = getActiveBlockNode(editorState);
-  const { nodeIndex } = getActiveNode(editorState);
-  let node = editorState.get('nodes').get(nodeIndex);
-  let parentNode = editorState.get('nodes').get(parentNodeIndex);
-  const nodeContent = node.get('content');
+  let { key : nodeKey, node } = getActiveBlockNode(editorState);
+  let children = node.get('children').toList();
+
   const start = selection.focusOffset < selection.anchorOffset ? selection.focusOffset : selection.anchorOffset;
   const end = selection.focusOffset > selection.anchorOffset ? selection.focusOffset : selection.anchorOffset;
-  let key;
+
   let nodes = editorState.get('nodes');
-  if (start !== end) {
-    key = keyGen();
-    nodes = nodes.push(fromJS({
-      type: type,
-      key: key,
-      depth: node.get('depth'),
-      content: nodeContent.substr(start, (end - start)),
-    }));
-    parentNode = parentNode.set('children', parentNode.get('children').push(key));
-  }
-  key = keyGen();
-  nodes = nodes.push(fromJS({
-    type: node.get('type'),
+  let selectedText = '';
+
+  for(let i = 0;i < children.size;i++) {
+    const c = children.get(i);
+    if (c.get('start') < start && c.get('end') > start) {
+      let cNode = nodes.get(c.get('key'));
+      const content = cNode.get('content');
+      selectedText += content.substr(start - c.get('start'));
+      cNode = cNode.set('content', content.substr(0, start - c.get('start')));
+      node = node.set('children', node.get('children').set(c.get('key'), c.set('end', start)));
+      console.log('node', node)
+      nodes = nodes.set(c.get('key'), cNode);
+    }
+  };
+
+  const key = keyGen();
+  nodes = nodes.set(key, fromJS({
+    type: type,
     key: key,
-    depth: node.get('depth'),
-    content: nodeContent.substr(end),
+    depth: 1,
+    content: selectedText,
   }));
-  parentNode = parentNode.set('children', parentNode.get('children').push(key));
-  node = node.set('content', nodeContent && nodeContent.substr(0, start));
-  nodes = nodes.set(nodeIndex, node);
-  nodes = nodes.set(parentNodeIndex, parentNode);
+  node = node.set('children', node.get('children').set(key, fromJS({ key, start: start, end: end - start })));
+
+  nodes = nodes.set(nodeKey, node);
   return editorState.set('nodes', nodes);
 }
 // todo123: insert node should break existing nodes.
 
 module.exports = {
   getInitialState,
+  changeBlockType,
   updateContent,
   insertNode,
   addNode,
