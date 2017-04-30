@@ -12,7 +12,7 @@ export default function getBlockComponent(blockType) {
             if (node.get('type') === 'text') {
               return node.get('content') || <br key={node.get('key')} />;
             } else {
-              const Node = nodes[node.get('type')];
+              const Node = nodes[node.get('type')].component;
               return <Node
                 key={node.get('key')}
                 index={node.get('key')}

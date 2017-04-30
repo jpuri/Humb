@@ -1,6 +1,7 @@
 import React from 'react';
 import { fromJS, Map } from 'immutable';
 import { keyGen } from '../utils';
+import editorNodes from '../nodes';
 
 const getInitialState = () => {
   const blockKey = keyGen();
@@ -45,6 +46,26 @@ function getActiveNode(editorState) {
     domNode = domNode.parentNode;
   }
   const node = key && editorState.get('nodes') && editorState.get('nodes').get(key);
+  return {
+    key,
+    node,
+    domNode,
+  };
+};
+
+function getActiveBlockNode(editorState) {
+  let domNode = window.getSelection().focusNode;
+  let key, node;
+  while(domNode) {
+    if(domNode.attributes && domNode.attributes.getNamedItem('data-editor-key')) {
+      key = domNode.attributes.getNamedItem('data-editor-key').nodeValue;
+      node = key && editorState.get('nodes') && editorState.get('nodes').get(key);
+      if (editorNodes[node.get('type')].type === 'block') {
+        break;
+      }
+    }
+    domNode = domNode.parentNode;
+  };
   return {
     key,
     node,
@@ -136,29 +157,8 @@ function updateContent(editorState, key) {
   return editorState.set('nodes', nodes);
 };
 // if node is not block type update node after this node also, use getActiveBlockNode and write recursive function to insert content
-
-
 // todo: each node type should have a filed type to indicate it type, BLOCK, INLINE, block can never be child of inline.
-// todo: currently we have hard-coded type 'normal' that should be made more dynamic
-function getActiveBlockNode(editorState) {
-  let domNode = window.getSelection().focusNode;
-  let key, node;
-  while(domNode) {
-    if(domNode.attributes && domNode.attributes.getNamedItem('data-editor-key')) {
-      key = domNode.attributes.getNamedItem('data-editor-key').nodeValue;
-      node = key && editorState.get('nodes') && editorState.get('nodes').get(key);
-      if (node.type === 'normal') {
-        break;
-      }
-    }
-    domNode = domNode.parentNode;
-  };
-  return {
-    key,
-    node,
-    domNode,
-  };
-};
+
 
 // tbd
 function insertNode(editorState, type) {

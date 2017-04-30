@@ -31,6 +31,7 @@ export function onKeyDown(e, editorState, onChange, updateEditorState) {
  * todo123:
  * - backspace to update state and delete last character
  * - selection deletion to update node contents
+ * - arrowKeys to change cursor
  */
 
 module.exports = {

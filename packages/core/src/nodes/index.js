@@ -1,17 +1,14 @@
 import getBlockComponent from './block';
-import italic from './italic';
-import bold from './bold';
-import text from './text';
+import getInlineComponent from './inline';
 
 module.exports = {
-  normal: getBlockComponent('div'),
-  h1: getBlockComponent('h1'),
-  h2: getBlockComponent('h2'),
-  h3: getBlockComponent('h3'),
-  h4: getBlockComponent('h4'),
-  h5: getBlockComponent('h5'),
-  h6: getBlockComponent('h6'),
-  italic,
-  bold,
-  text,
+  normal: { type: 'block', component: getBlockComponent('div') },
+  h1: { type: 'block', component: getBlockComponent('h1') },
+  h2: { type: 'block', component: getBlockComponent('h2') },
+  h3: { type: 'block', component: getBlockComponent('h3') },
+  h4: { type: 'block', component: getBlockComponent('h4') },
+  h5: { type: 'block', component: getBlockComponent('h5') },
+  h6: { type: 'block', component: getBlockComponent('h6') },
+  italic: { component: getInlineComponent('em') },
+  bold: { component: getInlineComponent('b') },
 };

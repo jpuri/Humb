@@ -54,5 +54,3 @@ export default {
     };
   },
 }
-
-// todo: save selection as part of editor state to have it restored during re-hydrating
