@@ -33,6 +33,7 @@ export function onKeyDown(e, editorState, onChange, updateEditorState) {
  * - selection deletion to update node contents
  * - arrowKeys to change cursor
  * - shift enter to be new line
+ * - Selection wrong after adding inline node
  */
 
 module.exports = {

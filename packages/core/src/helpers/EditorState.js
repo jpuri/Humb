@@ -167,33 +167,34 @@ function createBlockNodeAtSelectionStart(editorState, node, selectionStart) {
 
 function deleteSelection(editorState, node, selection) {
   let nodes = editorState.get('nodes');
+  const { start, end } = selection;
   const children = node.get('children').toList();
   for(let i = 0; i < children.size; i++) {
     const c = children.get(i);
     let cNode = nodes.get(c.get('key'));
-    if (c.get('end') > selection.start && c.get('end') < selection.end &&
-      c.get('start') > selection.start && c.get('start') < selection.end) {
+    if (c.get('end') > start && c.get('end') < end &&
+      c.get('start') > start && c.get('start') < end) {
       node = node.set('children', node.get('children').remove(c.get('key')));
       nodes = nodes.remove(c.get('key'));
-    } else if (c.get('start') < selection.start && c.get('end') > selection.end) {
+    } else if (c.get('start') < start && c.get('end') > end) {
       const content = cNode.get('content');
       cNode = cNode.set(
         'content',
-        content.substr(0, selection.start - c.get('start')) + content.substr(selection.end),
+        content.substr(0, start - c.get('start')) + content.substr(end),
       );
       nodes = nodes.set(c.get('key'), cNode);
-    } else if (c.get('end') > selection.start && c.get('end') < selection.end) {
+    } else if (c.get('end') > start && c.get('end') < end) {
       const content = cNode.get('content');
       cNode = cNode.set(
         'content',
-        content.substr(0, selection.start - c.get('start'))
+        content.substr(0, start - c.get('start'))
       );
       nodes = nodes.set(c.get('key'), cNode);
-    } else if (c.get('start') > selection.start && c.get('start') < selection.end) {
+    } else if (c.get('start') > start && c.get('start') < end) {
       const content = cNode.get('content');
       cNode = cNode.set(
         'content',
-        content.substr(selection.end)
+        content.substr(end)
       );
       nodes = nodes.set(c.get('key'), cNode);
     }
@@ -220,11 +221,9 @@ function addNode(editorState) {
   }
 };
 
-/////////////////////////////////
-
 function updateContent(editorState, key) {
   const cursor = window.getSelection().focusOffset;
-  let { key: nodeKey, node } = getActiveNode(editorState);
+  let { key: nodeKey, node } = getActiveBlockNode(editorState);
   let nodes = editorState.get('nodes');
   const children = node.get('children').toList();
   for(let i = 0;i < children.size;i++) {
@@ -237,48 +236,80 @@ function updateContent(editorState, key) {
       nodes = nodes.set(c.get('key'), cNode);
       nodes = nodes.set(nodeKey, node);
       break;
+    } else if (c.get('start') > cursor) {
+      let cList = node.get('children');
+      cList = cList.set(c.get('key'), c.set('end', c.get('end') + 1));
+      cList = cList.set(c.get('key'), c.set('start', c.get('start') + 1));
+      node = node.set('children', cList);
+      nodes = nodes.set(nodeKey, node);
     }
   };
   return editorState.set('nodes', nodes);
 };
-// if node is not block type update node after this node also, use getActiveBlockNode and write recursive function to insert content
-// todo: each node type should have a filed type to indicate it type, BLOCK, INLINE, block can never be child of inline.
+// todo: if node is not block type update node after this node also, use getActiveBlockNode and write recursive function to insert content
 
-
-// tbd
 function insertNode(editorState, type) {
   const selection = window.getSelection();
   let { key : nodeKey, node } = getActiveBlockNode(editorState);
   let children = node.get('children').toList();
-
-  const start = selection.focusOffset < selection.anchorOffset ? selection.focusOffset : selection.anchorOffset;
-  const end = selection.focusOffset > selection.anchorOffset ? selection.focusOffset : selection.anchorOffset;
-
+  const { start, end } = Selection.getOffsets();
   let nodes = editorState.get('nodes');
   let selectedText = '';
+  let selectText = '';
 
   for(let i = 0;i < children.size;i++) {
     const c = children.get(i);
-    if (c.get('start') < start && c.get('end') > start) {
-      let cNode = nodes.get(c.get('key'));
+    let cNode = nodes.get(c.get('key'));
+    if (c.get('start') < start && c.get('end') > end) {
       const content = cNode.get('content');
-      selectedText += content.substr(start - c.get('start'));
-      cNode = cNode.set('content', content.substr(0, start - c.get('start')));
-      node = node.set('children', node.get('children').set(c.get('key'), c.set('end', start)));
-      console.log('node', node)
+      selectText += content.substr(start - c.get('start'), end - (start + c.get('start')));
+      cNode = cNode.set(
+        'content',
+        content.substr(0, start - c.get('start'))
+      );
       nodes = nodes.set(c.get('key'), cNode);
+      node = node.set(
+        'children',
+        node.get('children').set(c.get('key'), fromJS({ key: c.get('key'), start: 0, end: start })),
+      );
+      const childNode = createChildNode(
+        cNode.get('type'),
+        node.get('key'),
+        1,
+        content.substr(end - c.get('start'))
+      );
+      const childKey = childNode.get('key');
+      nodes = nodes.set(childKey, childNode);
+      node = node.set(
+        'children',
+        node.get('children').set(childKey, fromJS({ key: childKey, start: end + 1, end: content.length })),
+      );
+    } else if (c.get('end') > start && c.get('end') < end) {
+      const content = cNode.get('content');
+      cNode = cNode.set(
+        'content',
+        content.substr(0, start - c.get('start'))
+      );
+      nodes = nodes.set(c.get('key'), cNode);
+      selectText += content.substr(start - c.get('start'));
+    } else if (c.get('start') > start && c.get('start') < end) {
+      const content = cNode.get('content');
+      cNode = cNode.set(
+        'content',
+        content.substr(end)
+      );
+      nodes = nodes.set(c.get('key'), cNode);
+      selectText += content.substr(end - c.get('start'));
     }
   };
-
-  const key = keyGen();
-  nodes = nodes.set(key, fromJS({
-    type: type,
-    key: key,
-    depth: 1,
-    content: selectedText,
-  }));
-  node = node.set('children', node.get('children').set(key, fromJS({ key, start: start, end: end - start })));
-
+  const childNode = createChildNode(
+    type,
+    node.get('key'),
+    1,
+    selectText
+  );
+  nodes = nodes.set(childNode.get('key'), childNode);
+  node = node.set('children', node.get('children').set(childNode.get('key'), fromJS({ key: childNode.get('key'), start: start + 1, end: end })));
   nodes = nodes.set(nodeKey, node);
   return editorState.set('nodes', nodes);
 }

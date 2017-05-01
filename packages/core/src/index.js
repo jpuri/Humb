@@ -49,7 +49,7 @@ export class Editor extends Component {
         {editorNodes.toList().filter(node => node.get('depth') === 0).sortBy(node => node.get('start'))
           .map(node => {
             const Node = nodes[node.get('type')].component;
-            const children = node.get('children').toList().map(child => editorNodes.get(child.get('key')));
+            const children = node.get('children').toList().sortBy(child => child.get('start')).map(child => editorNodes.get(child.get('key')))
             return <Node
               key={node.get('key')}
               nodes={nodes}
